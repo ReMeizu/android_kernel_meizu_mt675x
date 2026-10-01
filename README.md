@@ -26,6 +26,8 @@ Use Android ARM64 GCC 4.9 and an external output directory, userdebug.
 Original copyright notices and GPL COPYING are preserved. Board validation,
 charging, battery policy, peripheral and Android integration remain open.
 
-This U20 export excludes an additional U10 S5K5E8YX camera source input
-until its original source release is verified. The U20 profile selects
-OV13853 and HI553. U10 firmware and camera inputs are separate prerequisites.
+The U10 S5K5E8YX sensor source comes from the official
+[Meizu M681 release](https://github.com/meizuosc/m681/tree/ae87bdadf3dd0520aabeaccfa3c5498b91cef76c/drivers/misc/mediatek/imgsensor/src/mt6755/s5k5e8yx_mipi_raw),
+with the existing MediaTek 3.18 API adapter. Source availability and earlier
+compilation do not confirm module tuning, board power sequencing or camera
+operation on U10. The U20 profile selects OV13853 and HI553.

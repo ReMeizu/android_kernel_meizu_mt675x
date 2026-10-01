@@ -1,3 +1,4 @@
+GT9XX_U10_PRIVATE_INCLUDE ?= $(srctree)/drivers/input/touchscreen/mediatek/GT9XX_MZ/config_u10
 GT9XX_U20_PRIVATE_INCLUDE ?= $(srctree)/drivers/input/touchscreen/mediatek/GT9XX_MZ/config_u20
 
 # Meizu GT9xx driver and board-owned resources.
