@@ -4,6 +4,7 @@ GT9XX_U20_PRIVATE_INCLUDE ?= $(srctree)/drivers/input/touchscreen/mediatek/GT9XX
 
 ccflags-y += -I$(srctree)/drivers/input/touchscreen/mediatek/
 ccflags-y += -I$(srctree)/drivers/input/touchscreen/mediatek/GT9XX_MZ/
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/$(MTK_PLATFORM)/include/
 
