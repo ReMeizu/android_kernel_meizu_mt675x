@@ -1,33 +1,44 @@
-# Meizu MT675x Linux 3.18
+# Meizu U10 and U20 kernel
 
-Board-driver sources for U10 (MT6750) and U20 (MT6755), based on the
-Meizu M6 BSP. The U10 reference kernel previously linked with its own
-MT6353, display, touch and board DT. The U20 reference linked panels,
-MT6351 audio and cameras before the own-touch profile was completed.
+Linux 3.18 board-driver sources based on the Meizu M6 BSP. U10 has MT6750
+and MT6353; U20 has MT6755 and MT6351. Both use the native `mt6755` build
+layout. Each board has its own configuration and device tree.
 
-| Module | U10 | U20 |
+| Component | U10 | U20 |
 | --- | --- | --- |
-| Own device tree and PMIC selection | Source and earlier full link | Source and earlier full link |
-| Display / panel variants | Five variants, earlier full link | Six variants, earlier full link |
-| Goodix touch | Own profile; external executable firmware required | Own regulator/configuration profile; new compile pending |
-| Audio / camera / connectivity / modem / suspend | Device testing pending | Device testing pending |
+| Board / power controller | Own stock DTS and MT6353 register definitions | Own stock DTS and MT6351 selection |
+| Display | Five own panel wrappers | Own panel/bias code, including ILI9885A |
+| Goodix touch | Own configuration; runtime firmware loader | Own regulator and normal/charger configuration |
+| Alternative touch | FocalTech FT5X26 source | Use the board's Goodix selection |
+| Cameras | Native-selected sensor sources, including S5K5E8YX | OV13853 / HI553 selection |
+| Audio | MT6353 source integration | MT6351 source integration |
+| Wi-Fi / Bluetooth / GPS / modem | Legacy MediaTek sources; device tests pending | Legacy MediaTek sources; device tests pending |
+| GPU / suspend / charging | Device tests pending | Device tests pending |
 
-These newly prepared source snapshots have not been compiled or tested on
-phones. U10 requires its exact owner-provided Goodix firmware; do not use
-another board's payload. Its updater loads `goodix/u10.bin` through the kernel
-firmware loader: provide the verified owner image in `/lib/firmware/goodix/`
-in the early ramdisk before touch probing. Missing or invalid firmware fails
-update explicitly; no donor image is used. U20 uses configuration tables and the existing
-external-file updater, without embedding executable touch firmware.
-M3s/Y15 is a separate board with a Linux 3.10 stock kernel; no source-built
-M3s port is included here. Common chipset names do not establish compatibility.
+The complete U20 kernel at `217f8cbf` passed the
+[cloud build](https://github.com/ReMeizu/build-infra/actions/runs/36912871400):
+its generated configuration, compiled stock-identical board DTB, linked ARM64
+kernel and selected driver objects were verified. This is compilation evidence;
+no new U20 boot image or device acceptance is included.
 
-Use Android ARM64 GCC 4.9 and an external output directory, userdebug.
-Original copyright notices and GPL COPYING are preserved. Board validation,
-charging, battery policy, peripheral and Android integration remain open.
+U10's `u10-3.18` branch adds the runtime firmware loader and its own native
+build inputs. Its new full kernel build is pending. Early firmware availability,
+boot/ramdisk integration and device testing remain separate requirements.
 
-The U10 S5K5E8YX sensor source comes from the official
+The U10 updater requests `goodix/u10.bin` through the kernel firmware loader.
+Provide the exact owner image in `/lib/firmware/goodix/` in the early ramdisk
+before touch probing. Missing or invalid firmware fails the update explicitly.
+Executable firmware is not embedded in this source tree. The existing update,
+checksum, controller compatibility and programming paths are preserved.
+
+S5K5E8YX source comes from the official
 [Meizu M681 release](https://github.com/meizuosc/m681/tree/ae87bdadf3dd0520aabeaccfa3c5498b91cef76c/drivers/misc/mediatek/imgsensor/src/mt6755/s5k5e8yx_mipi_raw),
-with the existing MediaTek 3.18 API adapter. Source availability and earlier
-compilation do not confirm module tuning, board power sequencing or camera
-operation on U10. The U20 profile selects OV13853 and HI553.
+with a MediaTek 3.18 API adapter in the U10 branch. Source availability does
+not establish correct camera tuning, power sequencing or operation.
+
+Build with the pinned AOSP ARM64 GCC 4.9 toolchain, an external output
+directory and `TARGET_BUILD_VARIANT=userdebug`. Reviewed build profiles are
+in [ReMeizu/build-infra](https://github.com/ReMeizu/build-infra/tree/kernel-components/recipes/components).
+This is a native legacy kernel, not a mainline/GKI or Android 13 support claim.
+M3s/Y15 needs a separate board port. Original copyright notices and `COPYING`
+are preserved.
