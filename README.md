@@ -21,9 +21,11 @@ its generated configuration, compiled stock-identical board DTB, linked ARM64
 kernel and selected driver objects were verified. This is compilation evidence;
 no new U20 boot image or device acceptance is included.
 
-U10's `u10-3.18` branch adds the runtime firmware loader and its own native
-build inputs. Its new full kernel build is pending. Early firmware availability,
-boot/ramdisk integration and device testing remain separate requirements.
+U10's `u10-3.18` branch at `615e52d7` also passed its complete
+[cloud kernel build](https://github.com/ReMeizu/build-infra/actions/runs/36915371700).
+Its configuration, stock-identical compiled DTB, linked kernel and 20 selected
+driver objects were verified. Early firmware availability, boot/ramdisk
+integration and device testing remain separate requirements.
 
 The U10 updater requests `goodix/u10.bin` through the kernel firmware loader.
 Provide the exact owner image in `/lib/firmware/goodix/` in the early ramdisk
