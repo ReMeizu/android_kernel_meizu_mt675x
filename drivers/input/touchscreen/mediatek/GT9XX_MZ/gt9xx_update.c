@@ -34,12 +34,19 @@
 
 #include "tpd_custom_gt9xx.h"
 
+#ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
+#include <linux/firmware.h>
+#include <linux/mutex.h>
+#include <linux/module.h>
+#include "gt9xx_u10_firmware.h"
+#if GTP_COMPATIBLE_MODE
+#error "U10 firmware profile supports the verified flash-based GT915L only"
+#endif
+#endif
+
 #if ( (GTP_AUTO_UPDATE && GTP_HEADER_FW_UPDATE) || GTP_COMPATIBLE_MODE )
 #ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
-    #include <gt9xx_u10_stock_firmware.h>
-    #if GT9XX_U10_STOCK_FIRMWARE_BYTES != 90126
-    #error "U10 requires the verified 90126-byte own firmware"
-    #endif
+    /* U10 executable firmware is supplied at runtime by its owner. */
 #else
     #include "gt9xx_firmware.h"
 #endif
@@ -107,6 +114,12 @@ typedef struct
     u32 fw_total_len;
     u32 fw_burned_len;
 } st_update_msg;
+
+#ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
+static DEFINE_MUTEX(gup_u10_update_lock);
+static const struct firmware *gup_u10_firmware;
+MODULE_FIRMWARE("goodix/u10.bin");
+#endif
 
 st_update_msg update_msg;
 u8 gtp_loading_fw;
@@ -725,6 +738,24 @@ static u8 gup_check_update_file(struct i2c_client *client, st_fw_head *fw_head, 
     {
 #if GTP_AUTO_UPDATE
     #if GTP_HEADER_FW_UPDATE
+#ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
+        ret = request_firmware_direct(&gup_u10_firmware, "goodix/u10.bin",
+                                      &client->dev);
+        if (ret) {
+            GTP_ERROR("U10 firmware request failed: %d", ret);
+            return FAIL;
+        }
+        ret = gup_u10_validate_firmware(gup_u10_firmware->data,
+                                        gup_u10_firmware->size);
+        if (ret) {
+            GTP_ERROR("U10 firmware validation failed: %d", ret);
+            return FAIL;
+        }
+        update_msg.fw_total_len = gup_u10_firmware->size - FW_HEAD_LENGTH;
+        memcpy(fw_head, gup_u10_firmware->data, FW_HEAD_LENGTH);
+        got_file_flag = HEADER_FW_READY;
+        return SUCCESS;
+#else
 	GTP_INFO("Update by default firmware array");
 	update_msg.fw_total_len = sizeof(gtp_default_FW) - FW_HEAD_LENGTH;
 	if (sizeof(gtp_default_FW) < (FW_HEAD_LENGTH + FW_SECTION_LENGTH*4+FW_DSP_ISP_LENGTH+FW_DSP_LENGTH+FW_BOOT_LENGTH))
@@ -751,6 +782,7 @@ static u8 gup_check_update_file(struct i2c_client *client, st_fw_head *fw_head, 
 	got_file_flag = HEADER_FW_READY;
 	return SUCCESS;
 
+#endif
     #else
 	#if GTP_AUTO_UPDATE_CFG
 	    gup_search_file(AUTO_SEARCH_BIN | AUTO_SEARCH_CFG);
@@ -905,6 +937,14 @@ static u8 gup_load_section_file(u8 *buf, u32 offset, u16 length, u8 set_or_end)
 #if (GTP_AUTO_UPDATE && GTP_HEADER_FW_UPDATE)
     if (HEADER_FW_READY == got_file_flag)
     {
+#ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
+        if (!gup_u10_firmware ||
+            (set_or_end != SEEK_SET && set_or_end != SEEK_END) ||
+            gup_u10_copy_section(buf, gup_u10_firmware->data,
+                                 gup_u10_firmware->size, offset, length,
+                                 set_or_end == SEEK_END))
+            return FAIL;
+#else
 	if(SEEK_SET == set_or_end)
 	{
 	    memcpy(buf, &gtp_default_FW[FW_HEAD_LENGTH + offset], length);
@@ -913,6 +953,7 @@ static u8 gup_load_section_file(u8 *buf, u32 offset, u16 length, u8 set_or_end)
 	{
 	    memcpy(buf, &gtp_default_FW[update_msg.fw_total_len + FW_HEAD_LENGTH - offset], length);
 	}
+#endif
 	return SUCCESS;
     }
 #endif
@@ -2186,6 +2227,13 @@ s32 gup_update_proc(void *dir)
     s32 update_ret = FAIL;
     st_fw_head fw_head;
 
+#ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
+    /* Tool writes and the automatic worker share update_msg and controller. */
+    if (!mutex_trylock(&gup_u10_update_lock))
+        return FAIL;
+    gup_u10_firmware = NULL;
+#endif
+
     GTP_INFO("[update_proc]Begin update ......");
 
     msleep(200);//add by xunanbin 20151130
@@ -2359,6 +2407,11 @@ update_fail:
 
 file_fail:
 
+#ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
+    release_firmware(gup_u10_firmware);
+    gup_u10_firmware = NULL;
+#endif
+
 	if (update_msg.file && !IS_ERR(update_msg.file))
 	{
 	if (update_msg.old_fs)
@@ -2388,11 +2441,17 @@ file_fail:
     if (SUCCESS == update_ret)
     {
 	show_len = 100;
+#ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
+        mutex_unlock(&gup_u10_update_lock);
+#endif
 	return SUCCESS;
     }
     else
     {
 	show_len = 200;
+#ifdef CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
+        mutex_unlock(&gup_u10_update_lock);
+#endif
 	return FAIL;
     }
 }

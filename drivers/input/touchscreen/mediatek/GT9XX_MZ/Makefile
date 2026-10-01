@@ -9,15 +9,12 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/$(MTK_PLATFORM)/include/
 
 ifeq ($(CONFIG_TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES),y)
-# Matching board configuration and firmware are provided by the owner.
+# Matching board configuration is provided by the owner; firmware is runtime data.
 ifeq ($(strip $(GT9XX_U10_PRIVATE_INCLUDE)),)
 $(error U10 requires GT9XX_U10_PRIVATE_INCLUDE; donor Goodix payloads are forbidden)
 endif
 ifeq ($(wildcard $(GT9XX_U10_PRIVATE_INCLUDE)/gt9xx_u10_stock_config.h),)
 $(error Missing private U10 Goodix configuration header)
-endif
-ifeq ($(wildcard $(GT9XX_U10_PRIVATE_INCLUDE)/gt9xx_u10_stock_firmware.h),)
-$(error Missing private U10 Goodix firmware header)
 endif
 ccflags-y += -I$(GT9XX_U10_PRIVATE_INCLUDE)
 endif

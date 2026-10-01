@@ -14,7 +14,10 @@ MT6351 audio and cameras before the own-touch profile was completed.
 
 These newly prepared source snapshots have not been compiled or tested on
 phones. U10 requires its exact owner-provided Goodix firmware; do not use
-another board's payload. U20 uses configuration tables and the existing
+another board's payload. Its updater loads `goodix/u10.bin` through the kernel
+firmware loader: provide the verified owner image in `/lib/firmware/goodix/`
+in the early ramdisk before touch probing. Missing or invalid firmware fails
+update explicitly; no donor image is used. U20 uses configuration tables and the existing
 external-file updater, without embedding executable touch firmware.
 M3s/Y15 is a separate board with a Linux 3.10 stock kernel; no source-built
 M3s port is included here. Common chipset names do not establish compatibility.

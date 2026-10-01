@@ -214,13 +214,15 @@ config TOUCHSCREEN_MTK_GT9XX_U10_STOCK_RESOURCES
 	depends on TOUCHSCREEN_MTK_GT9XX_MZ && OF && REGULATOR
 	depends on ARCH_MT6755 && MTK_PMIC_NEW_ARCH = y
 	depends on MTK_PMIC_CHIP_MT6353 = y
+	select FW_LOADER
 	default n
 	help
 	  Use the U10 Goodix DT client (mediatek,cap_touch_gt), logical
 	  touch pinctrl states and the MT6353 VLDO28 API recovered from
 	  the U10 stock kernel. Requires the U10 touch DT and vtouch supply.
-	  Requires privately generated own U10 configuration and firmware
-	  headers via GT9XX_U10_PRIVATE_INCLUDE. There is no donor fallback.
+	  Requires an own U10 configuration header via GT9XX_U10_PRIVATE_INCLUDE
+	  and owner-provided goodix/u10.bin in the kernel firmware search path
+	  before automatic update starts. There is no donor fallback.
 	  The complete U10 board port still requires separate validation.
 	  Do not enable for M3s, U20, or the existing m681 resource profile.
 
